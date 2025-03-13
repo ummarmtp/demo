@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
-const useragent = require('user-agent'); // For parsing User-Agent header
-const os = require('os');
+const UAParser = require('ua-parser-js'); // Import the ua-parser-js library
 
 // Middleware to log request details
 app.use((req, res, next) => {
@@ -17,29 +16,33 @@ app.get('/', (req, res) => {
     }
 
     // Get User-Agent (browser and device details)
-    const userAgent = req.headers['user-agent'];
+    const userAgentString = req.headers['user-agent'];
+
+    let userAgentDetails = null;
+    if (userAgentString) {
+        // Parse the User-Agent string
+        const parser = new UAParser();
+        const result = parser.setUA(userAgentString).getResult();
+
+        userAgentDetails = {
+            browser: result.browser.name + ' ' + result.browser.version,
+            os: result.os.name + ' ' + result.os.version,
+            device: result.device.model || 'Desktop',
+            platform: result.os.name
+        };
+    }
 
     // Get hostname (optional)
-    const hostname = os.hostname();
-
-    // Get all request headers (optional)
-    const headers = req.headers;
-
-    // Get device type using user-agent package
-    const deviceDetails = user.parse(userAgent);
+    const hostname = require('os').hostname();
 
     // Response object
     res.json({
         "Client IP": clientIp,
-        "Device Info": {
-            "Browser": deviceDetails.browser,
-            "OS": deviceDetails.os,
-            "Platform": deviceDetails.platform
-        },
+        "Device Info": userAgentDetails || "No User-Agent data",
         "Hostname": hostname,
         "Referer": req.headers['referer'] || "Unknown",
         "Accepted Languages": req.headers['accept-language'],
-        "All Headers": headers
+        "All Headers": req.headers
     });
 });
 
