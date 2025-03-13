@@ -1,16 +1,14 @@
-const express = require('express');
-const app = express();
+const http = require('http');
 
-// Route to display client IP
-app.get('/', (req, res) => {
-    // Get the client IP, considering proxies (if any)
-    //const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-
-    res.send(`Client IP: ${req.ip}`);
+const server = http.createServer((req, res) => {
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    console.log(`Client IP: ${clientIp}`);
+    
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Your IP has been logged on the server console.');
 });
 
-// Start the server, forcing IPv4
 const PORT = 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://127.0.0.1:${PORT}`);
+server.listen(PORT, () => {
+    console.log(`Server running at http://<your-server-ip>:${PORT}/`);
 });
